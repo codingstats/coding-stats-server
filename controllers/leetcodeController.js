@@ -1,39 +1,98 @@
 const axios = require('axios');
 const catchAsync = require("../util/catchAsync");
 
-//returns user details else than heatmap and coding question links
-exports.getUserDetails = catchAsync(async (req, res, next) => {
-    //we will be using graphql to retrieve user details from leetcode api
-    //leetcode does not have official api
-
+//function to make graphQl request for leetcode graphql
+async function getLeetcodeGraphqlResponse(query, variables) {
     let data = JSON.stringify({
-        query: `query userProblemsSolved($username: String!) {
-        matchedUser(username: $username) {
-             submitStatsGlobal {
+        query: query, variables: variables
+    });
+
+    let config = {
+        method: 'post', url: 'https://leetcode.com/graphql/', headers: {'Content-Type': 'application/json',}, data: data
+    };
+
+    return axios(config);
+}
+
+//returns user details else than heatmap
+exports.getUserDetails = catchAsync(async (req, res, next) => {
+    //we will be using graphql to retrieve user details from leetcode
+    //leetcode does not have official api
+    const username = req.params.username;
+    const query = `
+        query userPublicProfile($username: String!, $year: Int ) {
+          matchedUser(username: $username) {
+            profile {
+              ranking
+              userAvatar
+            }
+            submitStatsGlobal {
                 acSubmissionNum {
                     difficulty
                     count
                 }
-             }
+            }
+            userCalendar(year: $year) {
+              streak
+            }
+            languageProblemCount {
+              languageName
+            }
+          }
         }
-   }`, variables: {"username": "meow"}
-    });
+    `;
+    const response = await getLeetcodeGraphqlResponse(query, {username});
 
-    let config = {
-        method: 'post',
-        url: 'https://leetcode.com/graphql/',
-        headers: {'Content-Type': 'application/json',},
-        data: data
-    };
+    if (!response.data.data.matchedUser) {
+        res.status(400).json({
+            status: "fail",
+            message: "No such user found!"
+        })
+    }
 
-    const response = await axios(config);
-
-    console.log(response.data);
+    const handler = response.data.data.matchedUser ? username : "";
+    const rank = response.data.data.matchedUser?.profile?.ranking || 0;
+    const streak = response.data.data.matchedUser?.userCalendar?.streak || 0;
+    const languagesUsed = response.data.data.matchedUser?.languageProblemCount.map(language => language.languageName) || [];
+    const submissionCount = response.data.data.matchedUser?.submitStatsGlobal?.acSubmissionNum || [];
 
     res.status(200).json({
         status: "success", data: {
-            response: ""
+            profileLink: `https://leetcode.com/${username}/`, handler, rank, streak, languagesUsed, submissionCount
         }
     });
+});
 
+
+//returns the heatmap data of the user
+exports.getUserHeatmap = catchAsync(async (req, res, next) => {
+    const username = req.body.username;
+    let year = req.body.year;
+
+    if (!username || !year) {
+        res.status(400).json({
+            status: "fail",
+            message: "username or year not provided"
+        });
+    }
+
+    const query = `
+    query userProfileCalendar($username: String!, $year: Int) {
+      matchedUser(username: $username) {
+        userCalendar(year: $year) {
+          submissionCalendar
+        }
+      }
+    }
+    `;
+
+    const response = await getLeetcodeGraphqlResponse(query, {username, year});
+    const heatmapData = JSON.parse(response.data.data?.matchedUser?.userCalendar?.submissionCalendar) || [];
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            heatmapData
+        }
+    });
 });

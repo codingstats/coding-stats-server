@@ -38,21 +38,23 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
 app.get("/", (req, res, next) => {
     res.status(200).json({
-        status: "success", message: "Welcome to meow meow server!",
+        status: "success", message: "Welcome to codingStats server!",
     });
 });
 
 //defining routers
-const gfgRouter = require("./routes/gfgRoutes");
+const gfgRouter = require("./routes/gfgRouters");
 const leetcodeRouter = require("./routes/leetcodeRouters");
+const codeforcesRouter = require("./routes/codeforcesRouters");
 app.use("/gfg", gfgRouter);
 app.use("/leetcode", leetcodeRouter);
+app.use("/codeforces", codeforcesRouter);
 
 
 //for undefined routs
 const AppError = require("./util/appError");
 app.all("*", (req, res, next) => {
-    next(new AppError(`Can't find ${req.originalUrl} on meow meow server!`, 404));
+    next(new AppError(`Can't find ${req.originalUrl} on codingStats server!`, 404));
 });
 
 //in case of operational error this middleware function will be called to return relevant error message
