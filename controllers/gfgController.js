@@ -1,7 +1,6 @@
 const axios = require('axios');
 const {JSDOM} = require('jsdom');
 const catchAsync = require("../util/catchAsync");
-const apiReturns = require("../util/apiReturns");
 
 //function to get DOM node represented by the given xpath
 function getElementByXpath(document, path) {
@@ -10,6 +9,8 @@ function getElementByXpath(document, path) {
 
 //returns user details else than heatmap and coding question links
 exports.getUserDetails = catchAsync(async (req, res, next) => {
+    //we will be scrapping the profile page for information
+    //gfg does not have any official api
     const username = req.params.username;
     const gfgProfileLink = "https://auth.geeksforgeeks.org/user/" + username;
 
@@ -18,6 +19,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     const dom = new JSDOM(response.data);
     const document = dom.window.document;
 
+    //if there is no such user
     if (!document.querySelector(".profile_container")) {
         res.status(400).json({
             status: 'fail',
@@ -25,10 +27,10 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
         });
     }
 
+    //user id is in script tag, inside a js object. scrap that string using regex
     let userId = 0;
     const regex = /user_id: (".*?")/s;
     const match = response.data.match(regex);
-
     if (match)
         userId = JSON.parse(match[1]);
 
@@ -60,10 +62,10 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 
 //returns the heatmap data of the user
 //heatmap data is intended be sent even if year is more than current year
-exports.getUserHeatmap = async (req, res, next) => {
+exports.getUserHeatmap = catchAsync(async (req, res, next) => {
     const username = req.body.username;
     const userid = req.body.userid;
-    const year = req.body.year;
+    let year = req.body.year;
 
     if (!username || !userid || !year) {
         res.status(400).json({
@@ -72,7 +74,29 @@ exports.getUserHeatmap = async (req, res, next) => {
         });
     }
 
-    const heatmapData = await apiReturns.getGfgHeatmap(username, userid, year);
+    if (year === new Date().getFullYear()) year = -1;
+
+    //api needs form data
+    const bodyFormData = new FormData();
+    bodyFormData.append('year', year);
+    bodyFormData.append('user_name', username);
+    bodyFormData.append('user_id', userid);
+
+    const response = await axios({
+        method: "post",
+        url: "https://auth.geeksforgeeks.org/profileV2/heat-map.php",
+        data: bodyFormData,
+        headers: {"Content-Type": "multipart/form-data"},
+    });
+
+    const regex = /var heatmapData = ({.*?});/s;
+    const match = response.data.match(regex);
+    let heatmapData = {};
+
+    if (match) {
+        const heatmapDataString = match[1];
+        heatmapData = JSON.parse(heatmapDataString);
+    }
 
     res.status(200).json({
         status: "success",
@@ -80,4 +104,4 @@ exports.getUserHeatmap = async (req, res, next) => {
             heatmapData
         }
     });
-}
+});

@@ -44,7 +44,10 @@ app.get("/", (req, res, next) => {
 
 //defining routers
 const gfgRouter = require("./routes/gfgRoutes");
+const leetcodeRouter = require("./routes/leetcodeRouters");
 app.use("/gfg", gfgRouter);
+app.use("/leetcode", leetcodeRouter);
+
 
 //for undefined routs
 const AppError = require("./util/appError");
