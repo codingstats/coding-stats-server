@@ -45,8 +45,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 
     if (!response.data.data.matchedUser) {
         res.status(400).json({
-            status: "fail",
-            message: "No such user found!"
+            status: "fail", message: "No such user found!"
         })
     }
 
@@ -71,8 +70,7 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
 
     if (!username || !year) {
         res.status(400).json({
-            status: "fail",
-            message: "username or year not provided"
+            status: "fail", message: "username or year not provided"
         });
     }
 
@@ -87,11 +85,17 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
     `;
 
     const response = await getLeetcodeGraphqlResponse(query, {username, year});
+    console.log(response.data.data);
+    if (!response.data.data.matchedUser) {
+        res.status(400).json({
+            status: "fail", message: response.data.errors[0].message
+        });
+    }
+
     const heatmapData = JSON.parse(response.data.data?.matchedUser?.userCalendar?.submissionCalendar) || [];
 
     res.status(200).json({
-        status: "success",
-        data: {
+        status: "success", data: {
             heatmapData
         }
     });
