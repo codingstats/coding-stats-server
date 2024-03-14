@@ -14,6 +14,42 @@ async function getLeetcodeGraphqlResponse(query, variables) {
     return axios(config);
 }
 
+
+//check if user with this username exists, no need to return user id :)
+exports.validateUser = catchAsync(async (req, res, next) => {
+    const username = req.params.username;
+
+    let response = {data: ""};
+    try {
+        response = await axios.get(`https://leetcode.com/${username}/`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0', 'Connection': 'keep-alive', 'Content-Type': 'application/json'
+            }
+        });
+    } catch (e) {
+        res.status(400).json({
+            status: "fail", message: "no such user!"
+        });
+        return;
+    }
+
+    response.data = response.data.substring(0, response.data.indexOf("<body") || response.data.indexOf("< body"));
+
+    if (response.data.includes("<title>Page Not Found - LeetCode</title>")) {
+        res.status(400).json({
+            status: "fail", message: "no such user!"
+        });
+        return;
+    }
+
+    res.status(200).json({
+        status: "success"
+    });
+
+
+});
+
+
 //returns user details else than heatmap
 exports.getUserDetails = catchAsync(async (req, res, next) => {
     //we will be using graphql to retrieve user details from leetcode

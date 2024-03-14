@@ -4,7 +4,7 @@ const authController = require("./../controllers/authController");
 const router = express.Router();
 
 // get basic details about a user
-router.get('/profile/:username', authController.addUserToRequest, userController.getUser);
+router.get('/profile/:username', authController.addUserToRequest, userController.getUser); //ok
 //for signing up
 router.post('/signup', authController.signup); //ok
 //for loging in

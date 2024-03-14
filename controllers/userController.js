@@ -25,19 +25,23 @@ exports.addCodingPlatform = catchAsync(async (req, res, next) => {
         platformName: requestedPlatformName, platformHandler: requestedPlatformHandler, platformUserId: 0
     });
 
-    const profileLink = `${req.protocol}://${req.get('host')}/${requestedPlatformName.toLowerCase()}/userdetails/${requestedPlatformHandler}`;
+    const validatingURL = `${req.protocol}://${req.get('host')}/${requestedPlatformName.toLowerCase()}/validateUser/${requestedPlatformHandler}`;
     let response;
 
     try {
-        response = await axios.get(profileLink);
+        response = await axios.get(validatingURL);
+        if (response.status !== 200) throw new Error("User does not exist!");
     } catch (e) {
         await CodingProfile.findOneAndDelete(codingProfile);
         res.status(400).json({
-            status: "fail", message: "User does not exists!"
+            status: "fail", message: "User does not exist!"
         });
+        return;
     }
 
-    await CodingProfile.findOneAndUpdate(codingProfile, {platformUserId: response.data.data.userId});
+    console.log(response.data);
+
+    await CodingProfile.findOneAndUpdate(codingProfile, {platformUserId: response.data.userId});
 
     user.codingPlatforms.push(codingProfile);
     await user.save({validateBeforeSave: false});
@@ -54,8 +58,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
 
     let user;
 
-    if (req.user && req.user.username === username) user = await User.findOne({username}).populate("codingPlatforms");
-    else user = await User.findOne({username}).select("-email").populate("codingPlatforms");
+    if (req.user && req.user.username === username) user = await User.findOne({username}).populate("codingPlatforms"); else user = await User.findOne({username}).select("-email").populate("codingPlatforms");
 
     if (!user) {
         res.status(400).json({

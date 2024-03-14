@@ -2,6 +2,25 @@ const axios = require('axios');
 const catchAsync = require("../../util/catchAsync");
 const puppeteer = require('puppeteer');
 
+//check if user with this username exists, if exists return userid if exists
+exports.validateUser = catchAsync(async (req, res, next) => {
+    const username = req.params.username;
+    const response = await axios.get(`https://codeforces.com/profile/${username}`);
+
+    //if there is no such user, we will be redirected. if we are redirected => there is no user
+    if (response.request._redirectable._redirectCount) {
+        res.status(400).json({
+            status: "fail", message: "no such user!"
+        });
+        return;
+    }
+
+    res.status(200).json({
+        status: "success"
+    });
+
+});
+
 //function to return user info else than heatmap
 exports.getUserDetails = catchAsync(async (req, res, next) => {
     //codeforces has an official api to retrieve user data, but the data returned is very limited
