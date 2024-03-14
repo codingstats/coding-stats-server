@@ -195,19 +195,20 @@ exports.updateMyPassword = catchAsync(async (req, res, next) => {
 //if there is a bearer token, try to add user to the req. return otherwise
 exports.addUserToRequest = async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) next();
-
-    console.log(1)
+    console.log(token);
+    if (!token) {
+        next();
+        return;
+    }
 
     // verify the token
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
-    console.log(2)
 
     // check if user still exists => to check the case if user has jwt token but the user was deleted!
     const freshUser = await User.findOne({_id: decoded.id});
     if (!freshUser || freshUser.changePasswordAfter(decoded.iat)) {
         next()
+        return
     }
     //also add this user to the request object
     req.user = freshUser;

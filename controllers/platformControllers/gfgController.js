@@ -52,7 +52,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     console.log(handler);
 
     const institute = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[text()='Institution']";
+        const xPath = "//*[starts-with(text(), 'Insti')]";
         return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.nextElementSibling?.textContent || "";
     });
 
