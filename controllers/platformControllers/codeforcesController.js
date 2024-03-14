@@ -1,5 +1,5 @@
 const axios = require('axios');
-const catchAsync = require("../util/catchAsync");
+const catchAsync = require("../../util/catchAsync");
 const puppeteer = require('puppeteer');
 
 //function to return user info else than heatmap

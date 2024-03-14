@@ -1,5 +1,5 @@
 const express = require("express");
-const leetcodeController = require("./../controllers/leetcodeController");
+const leetcodeController = require("../controllers/platformControllers/leetcodeController");
 const router = express.Router();
 
 router.route('/userdetails/:username').get(leetcodeController.getUserDetails);

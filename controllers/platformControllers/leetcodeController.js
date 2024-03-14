@@ -1,5 +1,5 @@
 const axios = require('axios');
-const catchAsync = require("../util/catchAsync");
+const catchAsync = require("../../util/catchAsync");
 
 //function to make graphQl request for leetcode graphql
 async function getLeetcodeGraphqlResponse(query, variables) {

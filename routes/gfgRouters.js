@@ -1,5 +1,5 @@
 const express = require("express");
-const gfgController = require("./../controllers/gfgController");
+const gfgController = require("../controllers/platformControllers/gfgController");
 const router = express.Router();
 
 router.route('/userdetails/:username').get(gfgController.getUserDetails);

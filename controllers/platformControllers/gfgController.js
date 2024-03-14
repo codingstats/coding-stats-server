@@ -1,6 +1,6 @@
 const axios = require('axios');
 const {JSDOM} = require('jsdom');
-const catchAsync = require("../util/catchAsync");
+const catchAsync = require("../../util/catchAsync");
 
 //function to get DOM node represented by the given xpath
 function getElementByXpath(document, path) {
@@ -65,7 +65,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
             institute, rank, campusAmbassador, streak, overallCodingScore,
             monthlyCodingScore, languagesUsed, submissionCount
         }
-    });
+    }); 
 });
 
 //returns the heatmap data of the user

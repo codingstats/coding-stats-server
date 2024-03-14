@@ -43,9 +43,11 @@ app.get("/", (req, res, next) => {
 });
 
 //defining routers
+const userRouter = require("./routes/userRouters");
 const gfgRouter = require("./routes/gfgRouters");
 const leetcodeRouter = require("./routes/leetcodeRouters");
 const codeforcesRouter = require("./routes/codeforcesRouters");
+app.use("/user", userRouter);
 app.use("/gfg", gfgRouter);
 app.use("/leetcode", leetcodeRouter);
 app.use("/codeforces", codeforcesRouter);
