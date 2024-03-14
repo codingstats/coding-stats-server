@@ -84,7 +84,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 
     const totalProblemSolved = await page.evaluate(() => {
         const xPath = "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[2]/div/div/span[2]";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent || 0;
+        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent.replace(/\D/g, "") || 0;
     });
 
     const school = await page.evaluate(() => {
@@ -120,7 +120,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success', data: {
-            profileLink, // userId,
+            profileLink,
             handler,
             institute,
             rank,

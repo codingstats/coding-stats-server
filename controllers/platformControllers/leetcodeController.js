@@ -19,25 +19,31 @@ async function getLeetcodeGraphqlResponse(query, variables) {
 exports.validateUser = catchAsync(async (req, res, next) => {
     const username = req.params.username;
 
-    let response = {data: ""};
-    try {
-        response = await axios.get(`https://leetcode.com/${username}/`, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0', 'Connection': 'keep-alive', 'Content-Type': 'application/json'
+    const query = `
+        query userPublicProfile($username: String!, $year: Int ) {
+          matchedUser(username: $username) {
+            profile {
+              ranking
+              userAvatar
             }
-        });
-    } catch (e) {
-        res.status(400).json({
-            status: "fail", message: "no such user!"
-        });
-        return;
-    }
+            submitStatsGlobal {
+                acSubmissionNum {
+                    difficulty
+                    count
+                }
+            }
+            userCalendar(year: $year) {
+              streak
+            }
+            
+          }
+        }
+    `;
+    const response = await getLeetcodeGraphqlResponse(query, {username});
 
-    response.data = response.data.substring(0, response.data.indexOf("<body") || response.data.indexOf("< body"));
-
-    if (response.data.includes("<title>Page Not Found - LeetCode</title>")) {
+    if (!response.data.data.matchedUser) {
         res.status(400).json({
-            status: "fail", message: "no such user!"
+            status: "fail", message: "No such user found!"
         });
         return;
     }
@@ -45,8 +51,6 @@ exports.validateUser = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: "success"
     });
-
-
 });
 
 
