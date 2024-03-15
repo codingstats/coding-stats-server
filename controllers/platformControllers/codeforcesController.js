@@ -59,7 +59,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success', data: {
-            profileLink, handler, rank, streak, submissionCount
+            platformName:"CODEFORCES" ,profileLink, handler, rank, streak, submissionCount
         }
     })
 });
@@ -102,6 +102,7 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: "success", data: {
+            platformName:"CODEFORCES",
             heatmapData: heatmap
         }
     });

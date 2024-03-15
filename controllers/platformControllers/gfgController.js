@@ -49,7 +49,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     }
 
     const handler = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[1]/div[2]/div[1]")?.textContent || "";
-    const institute = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[text()='Institute']")?.nextElementSibling.textContent || "";
+    const institute = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[starts-with(text(), 'Insti')]")?.nextElementSibling.textContent || "";
     const rank = document.querySelector('[data-tooltip="Institute Rank"]')?.textContent.replace(/\D/g, "") || 0;
     const campusAmbassador = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[3]/div[2]/a")?.textContent || "";
     const streak = document.querySelector('[data-tooltip="Longest streak/Global longest streak"]')?.textContent.split("/")[0].trim() || 0;
@@ -75,6 +75,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success', data: {
+            platformName: "GFG",
             profileLink, handler,
             institute, rank, campusAmbassador, streak, overallCodingScore,
             monthlyCodingScore, languagesUsed, submissionCount
@@ -123,6 +124,7 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: "success",
         data: {
+            platformName: "GFG",
             heatmapData
         }
     });
