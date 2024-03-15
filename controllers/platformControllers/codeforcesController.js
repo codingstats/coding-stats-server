@@ -55,11 +55,14 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     rank = match ? match[1] : 0;
 
     const streak = getElementByXpath(document, "//*[@id=\"pageContent\"]/div[4]/div/div[3]/div[2]/div[1]/div[1]").textContent.replace(/\D/g, "") || 0;
-    const submissionCount = [{All: getElementByXpath(document, "//*[@id=\"pageContent\"]/div[4]/div/div[3]/div[1]/div[1]/div[1]").textContent.replace(/\D/g, "") || 0}];
+    const submissionCount = [{
+        difficulty: "All",
+        count: getElementByXpath(document, "//*[@id=\"pageContent\"]/div[4]/div/div[3]/div[1]/div[1]/div[1]").textContent.replace(/\D/g, "") || 0
+    }];
 
     res.status(200).json({
         status: 'success', data: {
-            platformName:"CODEFORCES" ,profileLink, handler, rank, streak, submissionCount
+            platformName: "CODEFORCES", profileLink, handler, rank, streak, submissionCount
         }
     })
 });
@@ -97,12 +100,12 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
 
     const heatmap = {};
     for (const [time, count] of filteredMap) {
-        heatmap[time/1000] = count;
+        heatmap[time / 1000] = count;
     }
 
     res.status(200).json({
         status: "success", data: {
-            platformName:"CODEFORCES",
+            platformName: "CODEFORCES",
             heatmapData: heatmap
         }
     });

@@ -79,7 +79,7 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
     response = {};
     let leetcode = [];
     try {
-        response = await axios.get("https://leetcode.com/contest/", {headers: {'Content-Type': 'application/json'}});
+        response = await axios.get("https://leetcode.com/contest/", {headers: {'Content-Type': 'application/json', "User-Agent": "chrome"}});
         const dom = new JSDOM(response.data);
         const document = dom.window.document;
 
