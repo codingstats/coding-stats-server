@@ -47,10 +47,12 @@ const userRouter = require("./routes/userRouters");
 const gfgRouter = require("./routes/gfgRouters");
 const leetcodeRouter = require("./routes/leetcodeRouters");
 const codeforcesRouter = require("./routes/codeforcesRouters");
+const notificationRouter = require("./routes/notificationRouters");
 app.use("/user", userRouter);
 app.use("/gfg", gfgRouter);
 app.use("/leetcode", leetcodeRouter);
 app.use("/codeforces", codeforcesRouter);
+app.use("/notifications", notificationRouter);
 
 
 //for undefined routs

@@ -1,6 +1,5 @@
 const axios = require('axios');
 const catchAsync = require("../../util/catchAsync");
-const puppeteer = require('puppeteer');
 const {JSDOM} = require("jsdom");
 
 
