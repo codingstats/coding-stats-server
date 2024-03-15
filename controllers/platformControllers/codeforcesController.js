@@ -30,7 +30,15 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     const username = req.params.username;
     const profileLink = `https://codeforces.com/profile/${username}/`;
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        args:[
+            "--disable-setuid-sandbox",
+            "--no-sandbox",
+            "--single-process",
+            "--no-zygote"
+        ],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+    });
     const page = await browser.newPage();
     await page.goto(profileLink);
 
