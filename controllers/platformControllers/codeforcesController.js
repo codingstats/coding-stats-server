@@ -97,7 +97,7 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
 
     const heatmap = {};
     for (const [time, count] of filteredMap) {
-        heatmap[time] = count;
+        heatmap[time/1000] = count;
     }
 
     res.status(200).json({
