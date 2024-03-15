@@ -1,5 +1,4 @@
 const axios = require('axios');
-const {JSDOM} = require('jsdom');
 const catchAsync = require("../../util/catchAsync");
 const puppeteer = require('puppeteer');
 
@@ -19,8 +18,7 @@ exports.validateUser = catchAsync(async (req, res, next) => {
     }
 
     res.status(400).json({
-        status: "fail",
-        message: "no such user!"
+        status: "fail", message: "no such user!"
     });
 
 });
@@ -33,7 +31,11 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     const username = req.params.username;
     const profileLink = "https://auth.geeksforgeeks.org/user/" + username;
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        args: ["--disable-setuid-sandbox", "--no-sandbox", "--single-process", "--no-zygote",],
+        executablePath: process.env.NODE_ENV === "development" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
+    });
+
     const page = await browser.newPage();
     await page.goto(profileLink);
 

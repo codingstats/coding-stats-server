@@ -31,14 +31,10 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     const profileLink = `https://codeforces.com/profile/${username}/`;
 
     const browser = await puppeteer.launch({
-        args:[
-            "--disable-setuid-sandbox",
-            "--no-sandbox",
-            "--single-process",
-            "--no-zygote"
-        ],
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+        args: ["--disable-setuid-sandbox", "--no-sandbox", "--single-process", "--no-zygote",],
+        executablePath: process.env.NODE_ENV === "development" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
     });
+
     const page = await browser.newPage();
     await page.goto(profileLink);
 
