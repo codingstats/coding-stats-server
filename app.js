@@ -42,6 +42,25 @@ app.get("/", (req, res, next) => {
     });
 });
 
+app.get("/test", async (req, res, next) => {
+
+    const response = await axios.get(`https://leetcode.com/contest/`, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0',
+            'Connection': 'keep-alive',
+            'Content-Type': 'application/json'
+        }
+    });
+    // console.log(response);
+    console.log(response.status);
+
+    res.status(200).json({
+        status: "success",
+        message: "this is for testing functions",
+    })
+
+});
+
 //defining routers
 const userRouter = require("./routes/userRouters");
 const gfgRouter = require("./routes/gfgRouters");
@@ -63,6 +82,7 @@ app.all("*", (req, res, next) => {
 
 //in case of operational error this middleware function will be called to return relevant error message
 const globalErrorController = require("./controllers/errorController");
+const axios = require("axios");
 app.use(globalErrorController);
 
 module.exports = app;
