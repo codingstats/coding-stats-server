@@ -1,8 +1,11 @@
 const axios = require('axios');
 const {JSDOM} = require('jsdom');
 const catchAsync = require("../../util/catchAsync");
-const puppeteer = require('puppeteer');
 
+//function to get DOM node represented by the given xpath
+function getElementByXpath(document, path) {
+    return document.evaluate(path, document, null, 9, null).singleNodeValue;
+}
 
 //check if user with this username exists, if exists return userid if exists
 exports.validateUser = catchAsync(async (req, res, next) => {
@@ -19,8 +22,7 @@ exports.validateUser = catchAsync(async (req, res, next) => {
     }
 
     res.status(400).json({
-        status: "fail",
-        message: "no such user!"
+        status: "fail", message: "no such user!"
     });
 
 });
@@ -33,103 +35,50 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     const username = req.params.username;
     const profileLink = "https://auth.geeksforgeeks.org/user/" + username;
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(profileLink);
+    const response = await axios.get(profileLink);
 
-    const check = await page.evaluate(() => {
-        return document.querySelector(".profile_container");
-    });
+    const dom = new JSDOM(response.data);
+    const document = dom.window.document;
 
     //if there is no such user
-    if (!check) {
+    if (!document.querySelector(".profile_container")) {
         res.status(400).json({
-            status: 'fail', message: "User does not exists"
+            status: 'fail',
+            message: "User does not exists"
         });
     }
 
-    const handler = await page.evaluate(() => document.querySelector(".profile_name").textContent || "");
-    console.log(handler);
+    const handler = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[1]/div[2]/div[1]")?.textContent || "";
+    const institute = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[starts-with(text(), 'Insti')]")?.nextElementSibling.textContent || "";
+    const rank = document.querySelector('[data-tooltip="Institute Rank"]')?.textContent.replace(/\D/g, "") || 0;
+    const campusAmbassador = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[3]/div[2]/a")?.textContent || "";
+    const streak = document.querySelector('[data-tooltip="Longest streak/Global longest streak"]')?.textContent.split("/")[0].trim() || 0;
+    const overallCodingScore = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[1]/div/div/span[2]")?.textContent || 0;
+    const monthlyCodingScore = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div/div/span[2]")?.textContent || 0;
+    const languagesUsed = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[text()='Language Used']")?.nextElementSibling.textContent.split(",") || [];
 
-    const institute = await page.evaluate(() => {
-        const xPath = "//*[starts-with(text(), 'Insti')]";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.nextElementSibling?.textContent || "";
-    });
+    const totalProblemSolved = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[2]/div/div/span[2]")?.textContent || 0;
+    const school = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[1]/a")?.textContent.replace(/\D/g, "") || 0;
+    const basic = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[2]/a")?.textContent.replace(/\D/g, "") || 0;
+    const easy = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[3]/a")?.textContent.replace(/\D/g, "") || 0;
+    const medium = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[4]/a")?.textContent.replace(/\D/g, "") || 0;
+    const hard = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[5]/a")?.textContent.replace(/\D/g, "") || 0;
 
-    const rank = await page.evaluate(() => document.querySelector('[data-tooltip="Institute Rank"]')?.textContent.replace(/\D/g, "") || 0);
-
-    const campusAmbassador = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[3]/div[2]/a";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent || "";
-    });
-
-    const streak = await page.evaluate(() => {
-        return document.querySelector('[data-tooltip="Longest streak/Global longest streak"]')?.textContent.split("/")[0].trim() || 0
-    });
-
-    const overallCodingScore = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[1]/div/div/span[2]";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent || 0;
-    });
-
-    const monthlyCodingScore = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div/div/span[2]";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent || 0;
-    });
-
-    const languagesUsed = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[text()='Language Used']";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.nextElementSibling?.textContent.split(",") || [];
-    });
-
-    const totalProblemSolved = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[2]/div/div/span[2]";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent.replace(/\D/g, "") || 0;
-    });
-
-    const school = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[1]/a";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent.replace(/\D/g, "") || 0;
-    });
-
-    const basic = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[2]/a";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent.replace(/\D/g, "") || 0;
-    });
-
-    const easy = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[3]/a";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent.replace(/\D/g, "") || 0;
-    });
-
-    const medium = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[4]/a";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent.replace(/\D/g, "") || 0;
-    });
-
-    const hard = await page.evaluate(() => {
-        const xPath = "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[5]/a";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue?.textContent.replace(/\D/g, "") || 0;
-    });
-
-    const submissionCount = [{difficulty: 'All', count: totalProblemSolved}, {
-        difficulty: 'School', count: school
-    }, {difficulty: 'Basic', count: basic}, {difficulty: 'Easy', count: easy}, {
-        difficulty: 'Medium', count: medium
-    }, {difficulty: 'Hard', count: hard}]
+    const submissionCount = [
+        {difficulty: 'All', count: totalProblemSolved},
+        {difficulty: 'School', count: school},
+        {difficulty: 'Basic', count: basic},
+        {difficulty: 'Easy', count: easy},
+        {difficulty: 'Medium', count: medium},
+        {difficulty: 'Hard', count: hard}
+    ]
 
     res.status(200).json({
         status: 'success', data: {
-            profileLink,
-            handler,
-            institute,
-            rank,
-            campusAmbassador,
-            streak,
-            overallCodingScore,
-            monthlyCodingScore,
-            languagesUsed,
-            submissionCount
+            platformName: "GFG",
+            profileLink, handler,
+            institute, rank, campusAmbassador, streak, overallCodingScore,
+            monthlyCodingScore, languagesUsed, submissionCount
         }
     });
 });
@@ -143,7 +92,8 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
 
     if (!username || !userid || !year) {
         res.status(400).json({
-            status: "fail", message: "username or userid or year not provided"
+            status: "fail",
+            message: "username or userid or year not provided"
         });
     }
 
@@ -172,7 +122,9 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
     }
 
     res.status(200).json({
-        status: "success", data: {
+        status: "success",
+        data: {
+            platformName: "GFG",
             heatmapData
         }
     });

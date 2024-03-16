@@ -97,6 +97,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: "success", data: {
+            platformName:"LEETCODE",
             profileLink: `https://leetcode.com/${username}/`, handler, rank, streak, languagesUsed, submissionCount
         }
     });
@@ -136,6 +137,7 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: "success", data: {
+            platformName:"LEETCODE",
             heatmapData
         }
     });

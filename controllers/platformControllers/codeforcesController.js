@@ -1,6 +1,12 @@
 const axios = require('axios');
 const catchAsync = require("../../util/catchAsync");
-const puppeteer = require('puppeteer');
+const {JSDOM} = require("jsdom");
+
+
+//function to get DOM node represented by the given xpath
+function getElementByXpath(document, path) {
+    return document.evaluate(path, document, null, 9, null).singleNodeValue;
+}
 
 //check if user with this username exists, if exists return userid if exists
 exports.validateUser = catchAsync(async (req, res, next) => {
@@ -24,43 +30,39 @@ exports.validateUser = catchAsync(async (req, res, next) => {
 //function to return user info else than heatmap
 exports.getUserDetails = catchAsync(async (req, res, next) => {
     //codeforces has an official api to retrieve user data, but the data returned is very limited
-    //for example we dont have endpoint to retrieve the streak or total questions submission
-    //i will be using puppeteer to webscrap the profile page
-
+    //for example we don't have endpoint to retrieve the streak or total questions submission
+    //will be web scraping
     const username = req.params.username;
-    const profileLink = `https://codeforces.com/profile/${username}/`;
+    const profileLink = `https://codeforces.com/profile/${username}`;
+    const response = await axios.get(`https://codeforces.com/profile/${username}`);
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(profileLink);
+    const dom = new JSDOM(response.data);
+    const document = dom.window.document;
 
-    const handler = await page.evaluate(() => {
-        const xPath = "//*[@id=\"pageContent\"]/div[2]/div/div[2]/div/h1/a";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue.textContent;
-    });
+    //if there is no such user, we will be redirected. if we are redirected => there is no user
+    if (response.request._redirectable._redirectCount) {
+        res.status(400).json({
+            status: "fail", message: "no such user!"
+        });
+        return;
+    }
 
-    const rank = await page.evaluate(() => {
-        const xPath = "//*[@id=\"pageContent\"]/div[2]/div/div[2]/ul/li[1]";
-        const text = document.evaluate(xPath, document, null, 9, null).singleNodeValue.innerText;
-        const regex = /Contest rating: (\d+)/s;
-        const match = text.match(regex);
-        return match ? match[1] : 0;
-    });
+    const handler = getElementByXpath(document, "//*[@id=\"pageContent\"]/div[2]/div/div[2]/div/h1/a").textContent;
 
+    let rank = getElementByXpath(document, "//*[@id=\"pageContent\"]/div[2]/div/div[2]/ul/li[1]").textContent;
+    const regex = /Contest rating:\s+(\d+)/s;
+    const match = rank.match(regex);
+    rank = match ? match[1] : 0;
 
-    const streak = await page.evaluate(() => {
-        const xPath = "//*[@id=\"pageContent\"]/div[4]/div/div[3]/div[2]/div[1]/div[1]";
-        return document.evaluate(xPath, document, null, 9, null).singleNodeValue.textContent.replace(/\D/g, "") || 0;
-    });
-
-    const submissionCount = await page.evaluate(() => {
-        const xPath = "//*[@id=\"pageContent\"]/div[4]/div/div[3]/div[1]/div[1]/div[1]";
-        return [{All: document.evaluate(xPath, document, null, 9, null).singleNodeValue.textContent.replace(/\D/g, "") || 0}];
-    });
+    const streak = getElementByXpath(document, "//*[@id=\"pageContent\"]/div[4]/div/div[3]/div[2]/div[1]/div[1]").textContent.replace(/\D/g, "") || 0;
+    const submissionCount = [{
+        difficulty: "All",
+        count: getElementByXpath(document, "//*[@id=\"pageContent\"]/div[4]/div/div[3]/div[1]/div[1]/div[1]").textContent.replace(/\D/g, "") || 0
+    }];
 
     res.status(200).json({
         status: 'success', data: {
-            profileLink, handler, rank, streak, submissionCount
+            platformName: "CODEFORCES", profileLink, handler, rank, streak, submissionCount
         }
     })
 });
@@ -98,11 +100,12 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
 
     const heatmap = {};
     for (const [time, count] of filteredMap) {
-        heatmap[time] = count;
+        heatmap[time / 1000] = count;
     }
 
     res.status(200).json({
         status: "success", data: {
+            platformName: "CODEFORCES",
             heatmapData: heatmap
         }
     });
