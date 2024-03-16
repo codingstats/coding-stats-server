@@ -47,9 +47,7 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
         const codeforcesRaw = response.data.result?.filter(contest => contest.phase === 'BEFORE');
         codeforces = codeforcesRaw.map(contest => {
             return {
-                title: contest.name,
-                start: getIST(contest.startTimeSeconds),
-                duration: contest.durationSeconds / 60, //to minutes
+                title: contest.name, start: getIST(contest.startTimeSeconds), duration: contest.durationSeconds / 60, //to minutes
                 link: "https://codeforces.com/contests/"
             }
         });
@@ -75,6 +73,7 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
     }
 
     response = {};
+    let error = null;
     let leetcode = [];
     try {
         response = await axios.get(`https://leetcode.com/contest/`, {
@@ -93,7 +92,6 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
             const weekday = dateRaw.split(" ")[0];
             const nextCurDate = getNextOrCurrentDateForWeekday(weekday.toLowerCase());
             const date = nextCurDate.getFullYear() + "-" + (nextCurDate.getMonth() + 1) + "-" + nextCurDate.getDate();
-            console.log(date);
             leetcode.push({
                 title,
                 start: new Date(date + dateRaw.replace(weekday, "")),
@@ -102,17 +100,16 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
             });
         }
     } catch (e) {
-        console.log(e);
+        error = e
     }
 
 
     res.status(200).json({
         status: "success", data: {
-            codeforces,
-            gfg,
-            leetcode
+            codeforces, gfg, leetcode, error
         }
     })
 
 
 });
+
