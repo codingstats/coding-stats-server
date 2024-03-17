@@ -10,17 +10,14 @@ router.post('/signup', authController.signup); //ok
 //for loging in
 router.post('/login', authController.login); //ok
 //if user forgot password
-router.post('/forgotPassword', authController.forgotPassword);
+router.post('/forgotPassword', authController.forgotPassword); //ok
 //user can reset password using link he receives in email
-router.patch('/resetPassword/:token', authController.resetPassword);
+router.patch('/resetPassword/:token', authController.resetPassword); //ok
 //user can change password using his previous password
-router.patch('/updateMyPassword', authController.protect, authController.updateMyPassword);
+router.patch('/updateMyPassword', authController.protect, authController.updateMyPassword); //ok
 //user can delete himself
-// router.post('/deleteMe', authController.protect, userController.deleteMe);
-// //user can update multiple fields
-// router.patch('/updateMe', authController.protect, userController.updateMe);
-
-
-router.post('/addCodingPlatform', authController.protect, userController.addCodingPlatform);
+router.post('/deleteMe', authController.protect, userController.deleteMe); //ok
+//to add/update a coding platform
+router.post('/addCodingPlatform', authController.protect, userController.addCodingPlatform); //ok
 
 module.exports = router;

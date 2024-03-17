@@ -43,8 +43,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     //if there is no such user
     if (!document.querySelector(".profile_container")) {
         res.status(400).json({
-            status: 'fail',
-            message: "User does not exists"
+            status: 'fail', message: "User does not exists"
         });
     }
 
@@ -57,28 +56,33 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     const monthlyCodingScore = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div/div/span[2]")?.textContent || 0;
     const languagesUsed = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[text()='Language Used']")?.nextElementSibling.textContent.split(",") || [];
 
-    const totalProblemSolved = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[2]/div/div/span[2]")?.textContent || 0;
-    const school = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[1]/a")?.textContent.replace(/\D/g, "") || 0;
-    const basic = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[2]/a")?.textContent.replace(/\D/g, "") || 0;
-    const easy = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[3]/a")?.textContent.replace(/\D/g, "") || 0;
-    const medium = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[4]/a")?.textContent.replace(/\D/g, "") || 0;
-    const hard = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[4]/div[1]/div/ul/li[5]/a")?.textContent.replace(/\D/g, "") || 0;
+    const totalProblemSolved = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[2]/div/div/span[2]")?.textContent.replace(/\D/g, "") || 0;
+    const arr = document.querySelectorAll(".tab");
+    const school = arr[0]?.textContent.replace(/\D/g, "") || 0;
+    const basic = arr[1]?.textContent.replace(/\D/g, "") || 0;
+    const easy = arr[2]?.textContent.replace(/\D/g, "") || 0;
+    const medium = arr[3]?.textContent.replace(/\D/g, "") || 0;
+    const hard = arr[4]?.textContent.replace(/\D/g, "") || 0;
 
-    const submissionCount = [
-        {difficulty: 'All', count: totalProblemSolved},
-        {difficulty: 'School', count: school},
-        {difficulty: 'Basic', count: basic},
-        {difficulty: 'Easy', count: easy},
-        {difficulty: 'Medium', count: medium},
-        {difficulty: 'Hard', count: hard}
-    ]
+    const submissionCount = [{difficulty: 'All', count: totalProblemSolved}, {
+        difficulty: 'School', count: school
+    }, {difficulty: 'Basic', count: basic}, {difficulty: 'Easy', count: easy}, {
+        difficulty: 'Medium', count: medium
+    }, {difficulty: 'Hard', count: hard}]
 
     res.status(200).json({
         status: 'success', data: {
             platformName: "GFG",
-            profileLink, handler,
-            institute, rank, campusAmbassador, streak, overallCodingScore,
-            monthlyCodingScore, languagesUsed, submissionCount
+            profileLink,
+            handler,
+            institute,
+            rank,
+            campusAmbassador,
+            streak,
+            overallCodingScore,
+            monthlyCodingScore,
+            languagesUsed,
+            submissionCount
         }
     });
 });
@@ -92,8 +96,7 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
 
     if (!username || !userid || !year) {
         res.status(400).json({
-            status: "fail",
-            message: "username or userid or year not provided"
+            status: "fail", message: "username or userid or year not provided"
         });
     }
 
@@ -122,10 +125,8 @@ exports.getUserHeatmap = catchAsync(async (req, res, next) => {
     }
 
     res.status(200).json({
-        status: "success",
-        data: {
-            platformName: "GFG",
-            heatmapData
+        status: "success", data: {
+            platformName: "GFG", heatmapData
         }
     });
 });
