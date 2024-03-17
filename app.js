@@ -6,18 +6,25 @@ const mongoSanitize = require("express-mongo-sanitize"); //sanitize the mongo in
 const xss = require("xss-clean"); //removes malicious code from input
 const cors = require("cors"); //prevents cors blockage
 
+//CORS enabled
+app.all("/", function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  next();
+});
+
 // security HTTP headers
 app.use(helmet());
 
 const corsOpts = {
-    origin: "*",
-    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-    allowedHeaders: ["*"],
+  origin: "*",
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+  allowedHeaders: ["*"],
 };
 app.use(cors(corsOpts));
 
 // read data from the body into req.body, max is 10kb.
-app.use(express.json({limit: "10kb"})); //data from body shall be added to req
+app.use(express.json({ limit: "10kb" })); //data from body shall be added to req
 
 //sanitize against non SQL code injection
 app.use(mongoSanitize());
@@ -28,18 +35,18 @@ app.use(xss());
 
 //adding the request time to req object
 app.use((req, res, next) => {
-    req.requestTime = new Date().toISOString();
-    next();
+  req.requestTime = new Date().toISOString();
+  next();
 });
 
 //development dependency, logs the recent request in the console
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
-
 app.get("/", (req, res, next) => {
-    res.status(200).json({
-        status: "success", message: "Welcome to codingStats server!",
-    });
+  res.status(200).json({
+    status: "success",
+    message: "Welcome to codingStats server!",
+  });
 });
 
 app.get("/test", async (req, res, next) => {
@@ -73,11 +80,12 @@ app.use("/leetcode", leetcodeRouter);
 app.use("/codeforces", codeforcesRouter);
 app.use("/notifications", notificationRouter);
 
-
 //for undefined routs
 const AppError = require("./util/appError");
 app.all("*", (req, res, next) => {
-    next(new AppError(`Can't find ${req.originalUrl} on codingStats server!`, 404));
+  next(
+    new AppError(`Can't find ${req.originalUrl} on codingStats server!`, 404)
+  );
 });
 
 //in case of operational error this middleware function will be called to return relevant error message
