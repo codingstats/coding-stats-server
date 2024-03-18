@@ -40,7 +40,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     //we need a key value for email
     await sendEmail({
         email: newUser.email, subject: "Welcome to Coding Stats! 🚀", message: `
-        Dear ${username},
+        Dear ${req.body.username || ""},
 
 Welcome aboard! We're thrilled to have you join Coding Stats and embark on your journey to mastering coding skills.
 
