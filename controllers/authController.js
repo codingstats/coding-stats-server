@@ -39,7 +39,30 @@ exports.signup = catchAsync(async (req, res, next) => {
 
     //we need a key value for email
     await sendEmail({
-        email: newUser.email, subject: "Welcome to Coding Stats!", message: `Swagatam!`
+        email: newUser.email, subject: "Welcome to Coding Stats! 🚀", message: `
+        Dear ${username},
+
+Welcome aboard! We're thrilled to have you join Coding Stats and embark on your journey to mastering coding skills.
+
+At Coding Stats, we're committed to providing you with the tools and insights you need to excel in your coding endeavors. As a new member, you now have access to a wealth of statistical data from various coding platforms such as LeetCode, GitHub, GeeksforGeeks, and more.
+
+Here's what you can expect from your [Website Name] experience:
+
+1. *Comprehensive Analytics*: Gain valuable insights into your coding performance across multiple platforms. Track your progress, identify areas for improvement, and celebrate your achievements.
+
+2. *Community Engagement*: Form groups and grow together.
+
+4. *Regular Updates and Notifications*: Stay informed about your coding activity with timely updates and notifications. From new achievements to upcoming contests, we'll keep you in the loop so you never miss out on important opportunities.
+
+To get started, simply log in to your account and explore all that Coding Stats has to offer. Whether you're a seasoned coder or just starting out, we're here to support you on your coding journey.
+
+Once again, welcome to Coding Stats! We're excited to see all that you'll accomplish.
+
+Happy coding!
+
+Best regards,
+Team Coding Stats
+        `
     });
 
     createSendToken(newUser, 201, res);
