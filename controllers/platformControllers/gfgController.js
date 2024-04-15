@@ -10,20 +10,22 @@ function getElementByXpath(document, path) {
 //check if user with this username exists, if exists return userid if exists
 exports.validateUser = catchAsync(async (req, res, next) => {
     const username = req.params.username;
-    const response = await axios.get(`https://auth.geeksforgeeks.org/user/${username}`);
 
-    // user id is in script tag, inside a js object. scrap that string using regex
-    const regex = /user_id: (".*?")/s;
-    const match = response.data.match(regex);
-    if (match) {
-        res.status(200).json({
-            status: "success", userId: JSON.parse(match[1])
+    try {
+        const response = await axios.get(`https://authapi.geeksforgeeks.org/api-get/user-profile-info/?handle=${username}`);
+
+        return res.status(200).json({
+            status: "success", userId: 0
+        });
+
+
+    } catch (e) {
+
+        res.status(400).json({
+            status: "fail", message: "no such user!"
         });
     }
 
-    res.status(400).json({
-        status: "fail", message: "no such user!"
-    });
 
 });
 
@@ -33,38 +35,43 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     //we will be scrapping the profile page for information
     //gfg does not have any official api
     const username = req.params.username;
+
+    let response;
+    try {
+        response = await axios.get(`https://authapi.geeksforgeeks.org/api-get/user-profile-info/?handle=${username}`);
+    } catch (e) {
+        return res.status(400).json({
+            status: "fail", message: "no such user!"
+        });
+    }
+
+    response = response.data.data;
+
+    console.log(response);
+
+    const handler = response.name;
+    const institute = response.institute_name;
+    const rank = response.institute_rank;
+    const campusAmbassador = response.campus_ambassador;
+    const streak = response.pod_solved_longest_streak;
+    const overallCodingScore = response.score;
+    const monthlyCodingScore = response.monthly_score;
+    const languagesUsed = "";
+    const allCount = response.total_problems_solved;
     const profileLink = "https://auth.geeksforgeeks.org/user/" + username;
 
-    const response = await axios.get(profileLink);
+    response = await axios.get(profileLink);
 
     const dom = new JSDOM(response.data);
     const document = dom.window.document;
 
-    //if there is no such user
-    if (!document.querySelector(".profile_container")) {
-        res.status(400).json({
-            status: 'fail', message: "User does not exists"
-        });
-    }
+    const school = getElementByXpath(document, "//div[starts-with(text(), 'SCHOOL')]\n")?.textContent.replace(/\D/g, "") || 0;
+    const basic = getElementByXpath(document, "//div[starts-with(text(), 'BASIC')]\n")?.textContent.replace(/\D/g, "") || 0;
+    const easy = getElementByXpath(document, "//div[starts-with(text(), 'EASY')]\n")?.textContent.replace(/\D/g, "") || 0;
+    const medium = getElementByXpath(document, "//div[starts-with(text(), 'MEDIUM')]\n")?.textContent.replace(/\D/g, "") || 0;
+    const hard = getElementByXpath(document, "//div[starts-with(text(), 'HARD')]\n")?.textContent.replace(/\D/g, "") || 0;
 
-    const handler = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[1]/div[2]/div[1]")?.textContent || "";
-    const institute = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[starts-with(text(), 'Insti')]")?.nextElementSibling.textContent || "";
-    const rank = document.querySelector('[data-tooltip="Institute Rank"]')?.textContent.replace(/\D/g, "") || 0;
-    const campusAmbassador = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[3]/div[2]/a")?.textContent || "";
-    const streak = document.querySelector('[data-tooltip="Longest streak/Global longest streak"]')?.textContent.split("/")[0].trim() || 0;
-    const overallCodingScore = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[1]/div/div/span[2]")?.textContent || 0;
-    const monthlyCodingScore = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div/div/span[2]")?.textContent || 0;
-    const languagesUsed = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[1]//div[text()='Language Used']")?.nextElementSibling.textContent.split(",") || [];
-
-    const totalProblemSolved = getElementByXpath(document, "/html/body/div[6]/div/div[2]/div[1]/div/div[3]/div/div[2]/div[2]/div/div/span[2]")?.textContent.replace(/\D/g, "") || 0;
-    const arr = document.querySelectorAll(".tab");
-    const school = arr[0]?.textContent.replace(/\D/g, "") || 0;
-    const basic = arr[1]?.textContent.replace(/\D/g, "") || 0;
-    const easy = arr[2]?.textContent.replace(/\D/g, "") || 0;
-    const medium = arr[3]?.textContent.replace(/\D/g, "") || 0;
-    const hard = arr[4]?.textContent.replace(/\D/g, "") || 0;
-
-    const submissionCount = [{difficulty: 'All', count: totalProblemSolved}, {
+    const submissionCount = [{difficulty: 'All', count: allCount}, {
         difficulty: 'School', count: school
     }, {difficulty: 'Basic', count: basic}, {difficulty: 'Easy', count: easy}, {
         difficulty: 'Medium', count: medium
@@ -72,8 +79,7 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success', data: {
-            platformName: "GFG",
-            profileLink,
+            platformName: "GFG", // profileLink,
             handler,
             institute,
             rank,
@@ -91,42 +97,30 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 //heatmap data is intended be sent even if year is more than current year
 exports.getUserHeatmap = catchAsync(async (req, res, next) => {
     const username = req.body.username;
-    const userid = req.body.userid;
     let year = req.body.year;
 
-    if (!username || !userid || !year) {
+    if (!username || !year) {
         res.status(400).json({
             status: "fail", message: "username or userid or year not provided"
         });
     }
 
-    if (year === new Date().getFullYear()) year = -1;
 
-    //api needs form data
-    const bodyFormData = new FormData();
-    bodyFormData.append('year', year);
-    bodyFormData.append('user_name', username);
-    bodyFormData.append('user_id', userid);
-
-    const response = await axios({
-        method: "post",
-        url: "https://auth.geeksforgeeks.org/profileV2/heat-map.php",
-        data: bodyFormData,
-        headers: {"Content-Type": "multipart/form-data"},
+    const response = await axios.post("https://practiceapi.geeksforgeeks.org/api/v1/user/problems/submissions/", {
+        "handle": `${username}`, "requestType": "getYearwiseUserSubmissions", "year": `${year}`, "month": ""
     });
 
-    const regex = /var heatmapData = ({.*?});/s;
-    const match = response.data.match(regex);
-    let heatmapData = {};
+    const data = response.data.result;
+    const newData = {}
 
-    if (match) {
-        const heatmapDataString = match[1];
-        heatmapData = JSON.parse(heatmapDataString);
+    for (const key in data) {
+        const unixTimestamp = new Date(key).getTime() / 1000; // Convert date string to Unix timestamp
+        newData[unixTimestamp] = data[key];
     }
 
     res.status(200).json({
         status: "success", data: {
-            platformName: "GFG", heatmapData
+            platformName: "GFG", heatmapData: newData
         }
     });
 });
