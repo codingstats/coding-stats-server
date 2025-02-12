@@ -11,10 +11,10 @@ function getElementByXpath(document, path) {
 //check if user with this username exists, if exists return userid if exists
 exports.validateUser = catchAsync(async (req, res, next) => {
     const username = req.params.username;
-    const response = await axios.get(`https://codeforces.com/profile/${username}`);
+    const response = await axios.get(`https://codeforces.com/api/user.info?handles=${username}`);
 
     //if there is no such user, we will be redirected. if we are redirected => there is no user
-    if (response.request._redirectable._redirectCount) {
+    if (response.status==='FAILED') {
         res.status(400).json({
             status: "fail", message: "no such user!"
         });
@@ -34,18 +34,23 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
     //will be web scraping
     const username = req.params.username;
     const profileLink = `https://codeforces.com/profile/${username}`;
-    const response = await axios.get(`https://codeforces.com/profile/${username}`);
-
-    const dom = new JSDOM(response.data);
+    const requestOptions = {
+        method: "GET",
+        redirect: "follow"
+      };
+    const r = await fetch(profileLink, requestOptions);
+    const response = await r.text();
+    const dom = new JSDOM(response);
     const document = dom.window.document;
 
+    //todo: read the response to determine if there are no such user, or validate the user using validateUser function
     //if there is no such user, we will be redirected. if we are redirected => there is no user
-    if (response.request._redirectable._redirectCount) {
-        res.status(400).json({
-            status: "fail", message: "no such user!"
-        });
-        return;
-    }
+    // if (response.request._redirectable._redirectCount) {
+    //     res.status(400).json({
+    //         status: "fail", message: "no such user!"
+    //     });
+    //     return;
+    // }
 
     const handler = getElementByXpath(document, "//*[@id=\"pageContent\"]/div[2]/div/div[2]/div/h1/a").textContent;
 
